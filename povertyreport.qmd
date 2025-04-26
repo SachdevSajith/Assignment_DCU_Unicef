@@ -1,0 +1,346 @@
+---
+title: "Moderate Food Poverty: A Global Challenge"
+format:
+  html:
+    toc: true
+    toc-depth: 3        
+    toc-title: "Contents"  
+    embed-resources: true
+    code-fold: true
+    theme: darkly
+    css: styles.css.txt
+    allow-html: true
+jupyter: python3
+---
+
+<div style="display: flex; justify-content: center; margin-top: -10px; margin-bottom: 30px;">
+  <div style="font-weight: bold; font-size: 1.3rem; text-align: center;">
+    "Food is a basic right, not a privilege."
+  </div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+  <p style="font-size: 1.1rem; font-weight: 500; margin: 0;">
+    Author: <strong>Sachdev Sajith</strong>
+  </p>
+  <p style="font-size: 1.1rem; margin: 0;">
+    Published: <strong>April 23, 2025</strong>
+  </p>
+</div>
+
+<img src="images/unicef_icon.png" width="250px" alt="UNICEF Logo" style="display: block; margin-left: auto; margin-right: auto;"/>
+
+UNICEF is committed to promoting and protecting the rights of children in India, where it has been active for 75 years. With approximately 450 staff members working in 17 states, covering 90 per cent of India's child population, UNICEF has the largest field presence among UN agencies in the country. This enables UNICEF to effectively reach the most vulnerable children.
+
+<div style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 1rem;">
+
+  <a href="https://www.unicef.org/india/what-we-do" target="_blank"
+     style="font-size: 1.2rem; font-weight: bold; color: #00bfff; text-decoration: none;">
+    EXPLORE UNICEF
+  </a>
+
+  <span style="color: #666;">|</span>
+
+  <a href="https://www.unicef.org/india/take-action" target="_blank"
+     style="font-size: 1.2rem; font-weight: bold; color: #00bfff; text-decoration: none;">
+    JOIN UNICEF
+  </a>
+
+  <span style="color: #666;">|</span>
+
+  <a href="https://cloud.info.unicef.org/donate?" target="_blank"
+     style="font-size: 1.2rem; font-weight: bold; color: #00bfff; text-decoration: none;">
+    DONATE
+  </a>
+
+</div>
+
+
+## Understanding Moderate Food Poverty
+
+Food poverty remains one of the most pressing global challenges, affecting millions of lives across all age groups. Among the most vulnerable are young children, whose well-being and development are directly impacted by limited access to food and basic services. Understanding how poverty affects children, especially in their early years is crucial for shaping effective policies and interventions. Child food poverty harms all children, but it is particularly damaging in early childhood when insufficient dietary intake of essential nutrients can cause the greatest harm to child survival, physical growth and cognitive development. The consequences can last a lifetime: children deprived of good nutrition in early childhood do less well at school and have lower earning capacity in adulthood, trapping them and their families in a cycle of poverty and deprivation.
+
+<img src="images/understanding.png" width="90%" alt="Graphic about Child Food Poverty and Impact"/>
+
+## Data Preparation
+
+The dataset used in this report originates from UNICEF’s global monitoring efforts and contains annual records of moderate poverty rates for a wide range of countries. This analysis takes a closer look at children aged 6 to 23 months, examining patterns in poverty and exploring even small differences to better identify where support is needed most, ensuring that no child is left behind. This report draws on UNICEF data to provide a comprehensive analysis of moderate poverty across countries and over time. Using Python and the Plotnine visualization library, we examine where poverty is most prevalent, how it changes over time, and how it correlates with key economic indicators. Our goal is to highlight global patterns, regional disparities, and areas where progress is urgently needed to ensure more equitable development.
+
+<p style="margin-top: 20px; font-size: 1.1rem;">
+ Please find the Tableau Version of this Report: 
+<a href="https://public.tableau.com/app/profile/sachdev.sajith/viz/SachdevSajith/Dashboard1" target="_blank" style="color: #007bff; font-weight: bold;">
+Tableau Public – Moderate Poverty Dashboard
+</a>
+</p>
+
+
+```{python}
+
+import pandas as pd
+import geopandas as gpd
+from plotnine import *
+
+# Reading the CSV file data
+df = pd.read_csv("merged_unicef_data.csv")
+
+# Renaming column for plotting ease
+df = df.rename(columns={
+    "GDP per capita (constant 2015 US$)": "GDP",
+    "Life expectancy at birth, total (years)": "life_expectancy"
+})
+
+# Loading world shapefile
+world = gpd.read_file("ne_110m_admin_0_countries.shp")
+world = world.rename(columns={"NAME": "country", "CONTINENT": "continent"})
+
+```
+
+## Continental Breakdown of Moderate Food Poverty
+
+This visualization illustrates the average moderate poverty rate across continents, based on the share of populations living under the threshold for a healthy diet. 
+```{python}
+
+# Merging continent information
+df_continent = df.merge(world[['country', 'continent']], on="country", how="left")
+
+# Calculating average poverty by continent
+continent_avg = (
+    df_continent
+    .dropna(subset=["obs_value", "continent"])
+    .groupby("continent")["obs_value"]
+    .mean()
+    .reset_index()
+    .sort_values("obs_value", ascending=False)
+)
+
+# Plotting
+(
+    ggplot(continent_avg) +
+    aes(x="continent", y="obs_value", fill="continent") +
+    geom_col() +
+    labs(
+        title="Average Moderate Poverty Rate by Continent",
+        x="Continent",
+        y="Average Poverty Rate (%)",
+        fill="Continent"
+    ) +
+    theme_light() +
+    theme(
+        figure_size=(8.2, 5),
+        axis_title=element_text(size=12),
+        axis_text=element_text(size=10),
+        plot_title=element_text(size=14)
+    )
+)
+
+```
+
+### Key Insights from the Bar Chart
+
+- **Africa** leads with the highest average poverty rate, exceeding 45%, reflecting deep systemic challenges in access to affordable, nutritious food.
+- **Asia** follows closely at around 40%, particularly driven by countries in South and Southeast Asia.
+- **Europe** and **South America** report the lowest average rates, under 25%, highlighting better food security frameworks and support systems.
+- **North America** and **Oceania** fall in the mid-range, suggesting pockets of inequality within otherwise high-income regions.
+
+These findings underscore the **geographic dimension of food poverty** and the urgent need for region-specific strategies.Interventions must consider local economies, social protections, and agricultural systems to ensure every child and family has the right to a healthy diet.
+
+## A Global Snapshot of Moderate Food Poverty
+
+```{python}
+
+# Average food poverty by country
+country_avg = (
+    df.groupby('country', as_index=False)['obs_value']
+    .mean()
+    .rename(columns={'obs_value': 'avg_poverty'})
+)
+
+# Merging with world map
+map_data = world.merge(country_avg, on="country", how="left")
+
+# Extracting the map coordinates
+map_data = map_data.explode(index_parts=False)
+map_data["coords"] = map_data.geometry.apply(
+    lambda geom: list(geom.exterior.coords) if geom and hasattr(geom, "exterior") else []
+)
+map_long = map_data.explode("coords")
+map_long[["long", "lat"]] = pd.DataFrame(map_long["coords"].tolist(), index=map_long.index)
+
+# Plotting
+(
+    ggplot(map_long, aes(x='long', y='lat', group='country', fill='avg_poverty')) +
+    geom_polygon(color='white', size=0.1) +
+    scale_fill_gradient(low="yellow", high="red", na_value="lightgrey", name="(%)") +
+    labs(caption="Source: UNICEF", x="", y="") +
+    coord_fixed() +
+    theme_bw() +
+    theme(figure_size=(8.3, 5.5))
+)
+
+```
+The map  presents a global snapshot of average moderate poverty rates by country. Countries are color-coded according to their poverty burden, with darker shades indicating higher rates. The geographic disparities are immediately visible: most of Africa, parts of South Asia, and some areas of Latin America exhibit persistently high poverty levels. In contrast, Europe and North America show considerably lower averages. This visual helps reinforce the idea that poverty is not evenly distributed, but rather deeply tied to geography, development status, and historical inequities.
+
+## A Statistical Portrait of Poverty and Life Expectancy
+
+```{python}
+
+# Merging continent information
+df_continent = df.merge(world[['country', 'continent']], on="country", how="left")
+
+# Summarizing data
+summary = (
+    df_continent
+    .dropna(subset=["obs_value", "life_expectancy"])
+    .groupby(["country", "continent"], as_index=False)
+    .agg({
+        "obs_value": "mean",
+        "life_expectancy": "mean"
+    })
+)
+
+# Plotting
+(
+    ggplot(summary, aes(x="obs_value", y="life_expectancy", color="continent")) +
+    geom_point(size=3, alpha=0.7) +
+    geom_smooth(method='lm', color='black', linetype='dashed') +
+    labs(
+        title="Life Expectancy vs Average Moderate Poverty Rate by Continent",
+        x="Average Moderate Poverty Rate (%)",
+        y="Life Expectancy (years)",
+        color="Continent"
+    ) +
+    theme_bw() +
+    theme(
+        figure_size=(8.2, 5),
+        plot_title=element_text(size=12, weight="bold"),
+        axis_title=element_text(size=12),
+        legend_title=element_text(size=10),
+        legend_text=element_text(size=9)
+    )
+)
+
+```
+
+This scatterplot reveals a clear inverse relationship between moderate poverty rates and life expectancy across continents. Countries with higher average poverty levels. This pattern underscores the critical link between nutrition access and long-term health outcomes, reinforcing that poverty is not just an economic measure but a determinant of survival and well-being. The downward trendline emphasizes how food insecurity shortens lives, highlighting the urgency of integrated poverty reduction and health policies, particularly in high-burden regions.
+
+### Tracking Life Expectancy Dynamics Across Continents
+
+```{python}
+
+# Reading continent information 
+world = gpd.read_file("ne_110m_admin_0_countries.shp")[["NAME", "CONTINENT"]]
+world.columns = ["country", "continent"]
+
+# Merging dataset with continent information
+df_with_continent = df.merge(world, on="country", how="left")
+
+# Filtering out the missing values
+df_with_continent = df_with_continent.dropna(subset=["obs_value", "continent", "country", "life_expectancy"])
+
+# Plotting Facets by continent with regression line
+(
+    ggplot(df_with_continent) +
+    aes(x="obs_value", y="life_expectancy", color="continent") +
+    geom_point(alpha=0.5) +
+    geom_smooth(method='lm', se=False, color='black') +
+    facet_wrap("continent", nrow=3) +
+    labs(
+        x="Average Moderate Poverty Rate (%)",
+        y="Life Expectancy (years)"
+    ) +
+    theme_classic() +
+    theme(
+        figure_size=(8, 8),
+        plot_title=element_text(size=13.8, weight='bold'),
+        axis_text_x=element_text(rotation=45, hjust=1)
+    )
+)
+
+```
+
+### Insights from the Faceted Life Expectancy Plot
+
+- **Africa**: Despite high poverty levels, the trendline shows a slight improvement in life expectancy, hinting at progress in healthcare access or child survival rates.
+- **Asia**: A declining trend in life expectancy as moderate poverty persists, reflecting disparities in economic growth distribution and nutritional access.
+- **Europe**: Exhibits a slightly positive trend, meaning that even with varying moderate poverty rates, life expectancy has improved marginally. Europe's robust healthcare and social support systems likely cushion the impact.
+- **North America**: Life expectancy exhibits a notable downward trend as poverty rises in certain areas, highlighting inequality within high-income regions.
+- **Oceania**: Limited data but shows a sharp decline, indicating that even smaller regions are not immune to food insecurity's effects.
+- **South America**: Displays minimal correlation, with relatively stable life expectancy across years, possibly due to consistent social safety nets in some countries.
+
+## Time-Series View of Poverty Trends
+
+```{python}
+
+# Preparing timeseries data
+timeseries = (
+    df_continent
+    .dropna(subset=["obs_value", "continent", "year"])
+    .groupby(["continent", "year"], as_index=False)
+    .agg({"obs_value": "mean"})
+)
+
+# Plotting line chart
+
+(
+    ggplot(timeseries, aes(x='year', y='obs_value', color='continent')) +
+    geom_line(size=1.5) +
+    scale_color_brewer(type='qual', palette='Set1', name='Continent') +
+    labs(
+        title='Average Moderate Poverty Over Year by Continent',
+        x='Year',
+        y='Average Poverty Rate (%)'
+    ) +
+    theme_light() +
+    theme(
+        figure_size=(8.2, 5),
+        plot_title=element_text(size=14),
+        axis_title=element_text(size=14),
+        axis_text=element_text(size=10),
+        legend_title=element_text(size=12),
+        legend_text=element_text(size=10)
+    )
+)
+
+```
+
+This time-series chart highlights the evolving trends in moderate poverty rates across continents from 2005 to 2022. Africa consistently records the highest levels, with fluctuations that reflect both ongoing challenges and periods of limited progress. Asia follows a similar but slightly more variable pattern, indicating regional disparities. Europe and South America maintain relatively lower poverty rates, with signs of gradual improvement in some years. Notably, Oceania and North America show inconsistent trends, suggesting localized vulnerabilities. These patterns underscore the persistent nature of moderate poverty globally, reinforcing the need for targeted, region-specific strategies to ensure sustainable progress.
+
+### Tracking Moderate Poverty Dynamics Across Continents
+```{python}
+
+## Plotting facets for line chart
+(
+    ggplot(timeseries, aes(x='year', y='obs_value', color='continent')) +
+    geom_line(size=1) +
+    facet_wrap("continent", ncol=1, scales='free_y') +
+    scale_color_brewer(type='qual', palette='Set1') +
+    labs(
+        x='Year',
+        y='Average Poverty Rate (%)'
+    ) +
+    theme_light() +
+    theme(
+        figure_size=(8, 10),
+        plot_title=element_text(size=16),
+        axis_title=element_text(size=13),
+        axis_text=element_text(size=10),
+        strip_text=element_text(size=12),
+        legend_position='none'
+    )
+)
+
+
+```
+
+### Key Insights by Continent
+
+- **Africa**: Consistently reports the highest poverty rates, fluctuating between 40% and 60%, with no sustained downward trend, indicating persistent structural challenges.
+- **Asia**: Shows a declining trend overall, though rates remain above 30%, highlighting progress in some regions and setbacks in others.
+- **Europe**: Maintains stable and relatively low poverty levels (around 22–28%), reflecting stronger economic and social support systems.
+- **North America**: Presents volatile trends, with peaks reaching nearly 50%, suggesting significant disparity or measurement variability within the region.
+- **Oceania**: Has limited data but shows a notable downward trend, implying possible improvements in food affordability or access.
+- **South America**: Displays high variability with rates ranging from 13% to 27%, pointing to fluctuating economic conditions and policy impacts across countries.
+
+## Conclusion
+
+Food poverty remains a persistent barrier to healthy childhood development around the world. The early years of a child’s life are critical for building a strong foundation in health, learning and well-being. When children lack access to basic nutrition, the consequences ripple through their future. Addressing food poverty is not just about feeding children today, but about securing their tomorrow.Despite the challenges, the smiles of children remind us of what is possible when support reaches those who need it most. Investing in the earliest years of life is one of the most effective ways to combat food poverty. Countries that prioritize early childhood care and nutrition show not only improved health outcomes but also higher life expectancy. Every child fed, every child supported, is a step closer to a more just and thriving world.
